@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lagriff — Operations Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14101F;
+    --bg-grad:#190f24;
+    --panel:#1C1629;
+    --panel-2:#221A33;
+    --line:rgba(244,239,233,0.08);
+    --line-2:rgba(244,239,233,0.16);
+    --ink:#F3EDE4;
+    --ink-dim:#B6ABC4;
+    --ink-faint:#766B88;
+    --solar:#FDB44B;
+    --solar-hi:#FFD27A;
+    --volt:#37D9C5;
+    --alert:#FF6552;
+    --r:16px;
+    --r-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .mono{font-family:"JetBrains Mono",monospace;font-feature-settings:"tnum" 1}
+  ::selection{background:rgba(253,180,75,0.28);color:#fff}
+
+  /* layout */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  /* rail */
+  .rail{
+    border-right:1px solid var(--line);
+    background:linear-gradient(180deg,var(--bg-grad),var(--bg));
+    display:flex;flex-direction:column;
+    padding:22px 18px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 6px 26px}
+  .brand-mark{flex:0 0 auto}
+  .brand-name{
+    font-family:"Bricolage Grotesque",sans-serif;
+    font-weight:800;font-size:19px;letter-spacing:-0.02em;line-height:1;
+  }
+  .brand-sub{font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;color:var(--ink-faint);margin-top:3px}
+  .nav{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+  .nav-h{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);padding:14px 12px 8px}
+  .nav a{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 12px;border-radius:var(--r-sm);
+    color:var(--ink-dim);text-decoration:none;font-size:14px;font-weight:500;
+    transition:background .16s,color .16s;
+  }
+  .nav a svg{flex:0 0 auto;opacity:.85}
+  .nav a:hover{background:rgba(244,239,233,0.04);color:var(--ink)}
+  .nav a.on{background:rgba(253,180,75,0.10);color:var(--solar-hi)}
+  .nav a.on svg{opacity:1}
+  .nav a:focus-visible{outline:2px solid var(--solar);outline-offset:1px}
+  .rail-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line)}
+  .acct{display:flex;align-items:center;gap:11px;padding:8px 6px}
+  .acct-badge{
+    width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+    background:linear-gradient(140deg,#2a2140,#1a1428);
+    border:1px solid var(--line-2);
+    display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--solar-hi);
+  }
+  .acct-name{font-size:13px;font-weight:600;line-height:1.2}
+  .acct-role{font-size:11px;color:var(--ink-faint)}
+
+  /* main */
+  .main{padding:26px clamp(20px,3vw,40px) 56px;max-width:1320px;width:100%}
+  .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+  .page-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:27px;letter-spacing:-0.025em;line-height:1.05}
+  .page-meta{font-size:13px;color:var(--ink-dim);margin-top:5px}
+  .page-meta b{color:var(--ink);font-weight:600}
+  .topbar-right{display:flex;align-items:center;gap:14px}
+  .clock{text-align:right}
+  .clock-time{font-size:18px;font-weight:500;letter-spacing:0.02em}
+  .clock-zone{font-size:11px;color:var(--ink-faint);letter-spacing:0.08em}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:7px 13px;border-radius:999px;
+    border:1px solid rgba(55,217,197,0.30);
+    background:rgba(55,217,197,0.08);
+    font-size:12.5px;font-weight:600;color:var(--volt);
+  }
+  .pill.cta{
+    border-color:rgba(253,180,75,0.38);background:rgba(253,180,75,0.12);color:var(--solar-hi);
+    text-decoration:none;transition:background .16s,transform .16s;
+  }
+  .pill.cta:hover{background:rgba(253,180,75,0.20);transform:translateY(-1px)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--volt);box-shadow:0 0 0 0 rgba(55,217,197,.5)}
+  .dot.live{animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(55,217,197,.45)}70%{box-shadow:0 0 0 7px rgba(55,217,197,0)}100%{box-shadow:0 0 0 0 rgba(55,217,197,0)}}
+
+  /* glimmer — subtle light sweep used to draw the eye across overview metrics */
+  .glimmer{position:relative;overflow:hidden}
+  .glimmer::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(100deg,transparent 35%,rgba(244,239,233,0.09) 47%,rgba(244,239,233,0.16) 50%,rgba(244,239,233,0.09) 53%,transparent 65%);
+    transform:translateX(-130%);
+    animation:glimmerSweep 6.5s ease-in-out infinite;
+    animation-delay:var(--glimmer-delay,0s);
+  }
+  @keyframes glimmerSweep{0%,58%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+
+  /* about / marketing band */
+  .about{margin-bottom:18px}
+  .about-body{padding:18px 20px 20px}
+  .about-lead{font-size:14.5px;color:var(--ink-dim);max-width:760px;line-height:1.55}
+  .about-lead b{color:var(--ink);font-weight:600}
+  .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .feature{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2)}
+  .feature-icon{
+    flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+    background:rgba(253,180,75,0.10);border:1px solid rgba(253,180,75,0.22);color:var(--solar-hi);
+  }
+  .feature-h{font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.3}
+  .feature-d{font-size:12px;color:var(--ink-faint);margin-top:3px;line-height:1.4}
+  @media (max-width:1080px){.feature-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:640px){.feature-grid{grid-template-columns:1fr}}
+
+  /* hero arc */
+  .hero{
+    position:relative;overflow:hidden;
+    border:1px solid var(--line);border-radius:var(--r);
+    background:
+      radial-gradient(120% 80% at 50% -10%,rgba(253,180,75,0.10),transparent 60%),
+      linear-gradient(180deg,#1b1430,#181126);
+    display:grid;grid-template-columns:1fr 250px;gap:6px;
+    margin-bottom:18px;
+  }
+  .arc-wrap{padding:20px 8px 8px 14px;min-width:0}
+  .arc-head{display:flex;align-items:center;gap:10px;padding:2px 8px 8px}
+  .arc-eyebrow{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint)}
+  .arc-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.01em}
+  svg.arc{display:block;width:100%;height:auto}
+  .hero-side{
+    border-left:1px solid var(--line);
+    padding:22px 22px 20px;display:flex;flex-direction:column;gap:18px;justify-content:center;
+  }
+  .read-label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+  .read-val{font-family:"JetBrains Mono",monospace;font-size:30px;font-weight:500;letter-spacing:-0.01em;line-height:1}
+  .read-val .u{font-size:14px;color:var(--ink-dim);margin-left:4px;font-weight:400}
+  .read-sub{font-size:12px;color:var(--ink-dim);margin-top:6px}
+  .read-val.solar{color:var(--solar-hi)}
+  .read-val.volt{color:var(--volt)}
+
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .tile{
+    border:1px solid var(--line);border-radius:var(--r);background:var(--panel);
+    padding:18px 18px 16px;position:relative;overflow:hidden;
+  }
+  .tile-label{font-size:12px;color:var(--ink-dim);display:flex;align-items:center;gap:7px}
+  .tile-num{font-family:"JetBrains Mono",monospace;font-size:26px;font-weight:500;margin-top:12px;letter-spacing:-0.01em;line-height:1}
+  .tile-num small{font-size:14px;color:var(--ink-faint);font-weight:400}
+  .tile-foot{font-size:12px;color:var(--ink-faint);margin-top:9px;display:flex;align-items:center;gap:6px}
+  .delta{font-weight:600;font-family:"JetBrains Mono",monospace;font-size:11.5px}
+  .delta.up{color:var(--volt)} .delta.dn{color:var(--alert)}
+  .tile .spark{position:absolute;right:14px;top:16px;opacity:.9}
+
+  /* panels grid */
+  .panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .panel-h-left{display:flex;align-items:center;gap:10px}
+  .panel-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.01em}
+  .panel-note{font-size:12px;color:var(--ink-faint)}
+  .panel-note b{color:var(--volt);font-weight:600}
+
+  .fleet{margin-bottom:18px}
+  .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(15px,1fr));gap:5px;padding:18px}
+  .cell{
+    aspect-ratio:1;border-radius:3.5px;background:#2a2238;cursor:default;
+    border:1px solid transparent;transition:transform .12s;
+  }
+  .cell:hover{transform:scale(1.45);z-index:3;position:relative;border-color:var(--line-2)}
+  .cell.ok{background:rgba(55,217,197,0.85)}
+  .cell.low{background:rgba(253,180,75,0.92)}
+  .cell.due{background:#2a2238;box-shadow:inset 0 0 0 2px var(--alert)}
+  .cell.off{background:#241d31;box-shadow:inset 0 0 0 1px rgba(244,239,233,0.07)}
+  .cell.ok.breathe{animation:breathe 4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.78}50%{opacity:1}}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;padding:0 18px 18px}
+  .leg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-dim)}
+  .swatch{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .sw-ok{background:rgba(55,217,197,0.85)} .sw-low{background:rgba(253,180,75,0.92)}
+  .sw-due{background:#2a2238;box-shadow:inset 0 0 0 2px var(--alert)} .sw-off{background:#241d31;box-shadow:inset 0 0 0 1px rgba(244,239,233,0.12)}
+
+  .bottom{display:grid;grid-template-columns:1.05fr 0.95fr;gap:18px}
+
+  /* payments */
+  .rows{padding:6px 0}
+  .row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px 18px;align-items:center;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .row-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .phone{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink)}
+  .unit-tag{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-dim);background:rgba(244,239,233,0.05);padding:2px 7px;border-radius:6px}
+  .row-sub{font-size:11.5px;color:var(--ink-faint)}
+  .amt{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:500;color:var(--volt);text-align:right}
+  .amt small{color:var(--ink-faint);font-weight:400;font-size:10px;display:block;margin-top:1px;letter-spacing:.04em}
+
+  /* alerts */
+  .alert-row{display:flex;gap:13px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .alert-row:last-child{border-bottom:none}
+  .sev{flex:0 0 auto;align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:0.08em;padding:4px 8px;border-radius:6px;margin-top:1px}
+  .sev.high{background:rgba(255,101,82,0.14);color:var(--alert)}
+  .sev.med{background:rgba(253,180,75,0.14);color:var(--solar)}
+  .sev.low{background:rgba(182,171,196,0.12);color:var(--ink-dim)}
+  .alert-body{min-width:0}
+  .alert-title{font-size:14px;font-weight:600;line-height:1.3}
+  .alert-title .uid{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim);margin-left:6px}
+  .alert-desc{font-size:12.5px;color:var(--ink-dim);margin-top:3px}
+  .alert-meta{font-size:11px;color:var(--ink-faint);margin-top:5px;letter-spacing:.02em}
+
+  @media (max-width:1080px){
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .bottom{grid-template-columns:1fr}
+  }
+  @media (max-width:860px){
+    .app{grid-template-columns:1fr}
+    .rail{position:static;height:auto;flex-direction:row;align-items:center;gap:18px;padding:14px 18px;border-right:none;border-bottom:1px solid var(--line)}
+    .nav,.nav-h,.rail-foot{display:none}
+    .brand{padding:0}
+    .hero{grid-template-columns:1fr}
+    .hero-side{border-left:none;border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;gap:24px}
+    .hero-side > div{flex:1 1 120px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- RAIL -->
+  <aside class="rail">
+    <div class="brand">
+      <span class="brand-mark">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+          <circle cx="15" cy="15" r="6.2" fill="#FDB44B"/>
+          <g stroke="#FDB44B" stroke-width="1.8" stroke-linecap="round">
+            <line x1="15" y1="2.5" x2="15" y2="6"/><line x1="15" y1="24" x2="15" y2="27.5"/>
+            <line x1="2.5" y1="15" x2="6" y2="15"/><line x1="24" y1="15" x2="27.5" y2="15"/>
+            <line x1="6.2" y1="6.2" x2="8.6" y2="8.6"/><line x1="21.4" y1="21.4" x2="23.8" y2="23.8"/>
+            <line x1="23.8" y1="6.2" x2="21.4" y2="8.6"/><line x1="8.6" y1="21.4" x2="6.2" y2="23.8"/>
+          </g>
+        </svg>
+      </span>
+      <div>
+        <div class="brand-name">LAGRIFF</div>
+        <div class="brand-sub">Operations</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="#" class="on" aria-current="page">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Overview
+      </a>
+      <a href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+        Fleet
+      </a>
+      <a href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Payments
+      </a>
+      <a href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>
+        Alerts
+      </a>
+      <a href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8a7 7 0 0 1-10 10z"/><path d="M2 22c1.5-3 4-5 6-7"/></svg>
+        Carbon
+      </a>
+      <a href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M19 20a5.6 5.6 0 0 0-3-5"/></svg>
+        Customers
+      </a>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="acct">
+        <div class="acct-badge">MS</div>
+        <div>
+          <div class="acct-name">Mwangaza Solar</div>
+          <div class="acct-role">Distributor · Nanyuki</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Overview</h1>
+        <div class="page-meta">Central &amp; Northern Kenya · <b>512</b> units deployed</div>
+      </div>
+      <div class="topbar-right">
+        <span class="pill"><span class="dot live"></span> All systems live</span>
+        <a class="pill cta" href="#" onclick="return false;">Book a live demo →</a>
+        <div class="clock">
+          <div class="clock-time mono" id="clock">—</div>
+          <div class="clock-zone" id="cdate">EAT · UTC+3</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT / MARKETING -->
+    <section class="panel about">
+      <div class="panel-head">
+        <div class="panel-h-left">
+          <span class="panel-title">About Lagriff</span>
+          <span class="panel-note">for installers evaluating the platform</span>
+        </div>
+        <span class="panel-note">Built &amp; supported in Kenya</span>
+      </div>
+      <div class="about-body">
+        <p class="about-lead">
+          <b>Lagriff</b> is Kenya's M-Pesa-native Pay-As-You-Go platform for solar installers selling on <b>lipa pole pole</b>.
+          A small controller goes on every system you deploy: when a customer pays via M-Pesa, their power unlocks in seconds —
+          when they fall behind, it locks itself automatically. No exercise books, no door-to-door chasing, no dollar billing.
+          You watch every unit, every shilling and every alert live, from one dashboard.
+        </p>
+        <div class="feature-grid">
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+            <div><div class="feature-h">Auto lock &amp; unlock</div><div class="feature-d">Tied directly to M-Pesa STK Push &amp; Paybill — confirmed and applied in seconds, no manual step.</div></div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+            <div><div class="feature-h">Live fleet dashboard</div><div class="feature-d">Every device, balance and status — online, low battery, due or locked — in one view.</div></div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            <div><div class="feature-h">SMS reminders</div><div class="feature-d">Sent automatically before a payment falls due, so lockout is never a surprise.</div></div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span>
+            <div><div class="feature-h">AI fraud &amp; maintenance alerts</div><div class="feature-d">Flags tamper events, wiring bypasses and fast battery drain before they cost you.</div></div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8a7 7 0 0 1-10 10z"/><path d="M2 22c1.5-3 4-5 6-7"/></svg></span>
+            <div><div class="feature-h">Carbon &amp; MRV reporting</div><div class="feature-d">CO₂ avoided per unit, fleet-wide — ready for carbon credit reporting out of the box.</div></div>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M19 20a5.6 5.6 0 0 0-3-5"/></svg></span>
+            <div><div class="feature-h">Priced in shillings</div><div class="feature-d">No dollar billing, no minimums — supported directly on WhatsApp by the team that built it.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HERO: DIURNAL ARC -->
+    <section class="hero">
+      <div class="arc-wrap">
+        <div class="arc-head">
+          <span class="arc-eyebrow">Today</span>
+          <span class="arc-title" id="arcTitle">Fleet generation across the day</span>
+        </div>
+        <svg class="arc" viewBox="0 0 1000 280" preserveAspectRatio="none" role="img" aria-label="Fleet solar generation curve following the sun across the day">
+          <defs>
+            <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FDB44B" stop-opacity="0.42"/>
+              <stop offset="55%" stop-color="#FDB44B" stop-opacity="0.10"/>
+              <stop offset="100%" stop-color="#FDB44B" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FDB44B" stop-opacity="0"/>
+              <stop offset="100%" stop-color="#FDB44B" stop-opacity="0.05"/>
+            </linearGradient>
+            <radialGradient id="sunGlow">
+              <stop offset="0%" stop-color="#FFD27A" stop-opacity="0.9"/>
+              <stop offset="40%" stop-color="#FDB44B" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#FDB44B" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <rect x="0" y="0" width="1000" height="214" fill="url(#sky)"/>
+          <!-- horizon -->
+          <line x1="0" y1="214" x2="1000" y2="214" stroke="rgba(244,239,233,0.14)" stroke-width="1"/>
+          <!-- hour grid -->
+          <g stroke="rgba(244,239,233,0.06)" stroke-width="1">
+            <line x1="250" y1="20" x2="250" y2="214"/>
+            <line x1="500" y1="20" x2="500" y2="214"/>
+            <line x1="750" y1="20" x2="750" y2="214"/>
+          </g>
+          <g fill="#766B88" font-family="JetBrains Mono, monospace" font-size="11">
+            <text x="6" y="232">00:00</text>
+            <text x="232" y="232">06:00</text>
+            <text x="482" y="232">12:00</text>
+            <text x="732" y="232">18:00</text>
+            <text x="952" y="232">24:00</text>
+          </g>
+
+          <!-- sun track (faint) -->
+          <path id="track" fill="none" stroke="rgba(253,180,75,0.18)" stroke-width="1.2" stroke-dasharray="2 5"/>
+          <!-- generation fill + stroke (filled by JS) -->
+          <path id="genFill" fill="url(#fill)"/>
+          <path id="genLine" fill="none" stroke="#FDB44B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- now marker -->
+          <line id="nowLine" x1="500" y1="18" x2="500" y2="214" stroke="rgba(255,255,255,0.30)" stroke-width="1" stroke-dasharray="3 4"/>
+          <circle id="sunGlowC" r="46" fill="url(#sunGlow)"/>
+          <circle id="sun" r="9" fill="#FFD27A"/>
+          <text id="nowLabel" font-family="JetBrains Mono, monospace" font-size="11" fill="#F3EDE4" text-anchor="middle">NOW</text>
+        </svg>
+      </div>
+
+      <div class="hero-side">
+        <div class="glimmer" style="--glimmer-delay:0s">
+          <div class="read-label">Generating now</div>
+          <div class="read-val solar mono"><span id="genNow">0.0</span><span class="u" id="genUnit">kW</span></div>
+          <div class="read-sub" id="genState">across 487 reporting units</div>
+        </div>
+        <div class="glimmer" style="--glimmer-delay:.6s">
+          <div class="read-label">Yield today</div>
+          <div class="read-val mono">412<span class="u">kWh</span></div>
+          <div class="read-sub">+8% vs 7-day average</div>
+        </div>
+        <div class="glimmer" style="--glimmer-delay:1.2s">
+          <div class="read-label">Fleet online</div>
+          <div class="read-val volt mono">487<span class="u">/ 512</span></div>
+          <div class="read-sub">25 offline · 4 in tamper hold</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TILES -->
+    <section class="tiles">
+      <div class="tile glimmer" style="--glimmer-delay:1.8s">
+        <div class="tile-label">Active accounts</div>
+        <div class="tile-num mono">438 <small>/ 512</small></div>
+        <div class="tile-foot">paid in last 30 days <span class="delta up">+12</span></div>
+      </div>
+      <div class="tile glimmer" style="--glimmer-delay:2.4s">
+        <div class="tile-label">Collected today</div>
+        <div class="tile-num mono">KES 86,400</div>
+        <div class="tile-foot">via M-Pesa · 312 payments <span class="delta up">+6%</span></div>
+        <svg class="spark" width="58" height="22" viewBox="0 0 58 22" fill="none"><polyline points="0,18 8,16 16,17 24,11 32,13 40,7 48,9 58,3" stroke="#37D9C5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tile glimmer" style="--glimmer-delay:3s">
+        <div class="tile-label">Collection rate</div>
+        <div class="tile-num mono">86<small>%</small></div>
+        <div class="tile-foot">trailing 30 days <span class="delta up">+3 pts</span></div>
+      </div>
+      <div class="tile glimmer" style="--glimmer-delay:3.6s">
+        <div class="tile-label">CO₂ avoided</div>
+        <div class="tile-num mono">24.7 <small>t</small></div>
+        <div class="tile-foot">this month · <span style="color:var(--volt)">MRV-ready</span></div>
+      </div>
+    </section>
+
+    <!-- FLEET STATUS WALL -->
+    <section class="panel fleet">
+      <div class="panel-head">
+        <div class="panel-h-left">
+          <span class="panel-title">Fleet</span>
+          <span class="panel-note">512 units · hover a cell for detail</span>
+        </div>
+        <span class="panel-note"><b>487</b> reporting · synced 12s ago</span>
+      </div>
+      <div class="wall" id="wall" aria-label="Fleet status grid, each cell is one deployed unit"></div>
+      <div class="legend">
+        <span class="leg"><span class="swatch sw-ok"></span> Online · charged</span>
+        <span class="leg"><span class="swatch sw-low"></span> Low battery</span>
+        <span class="leg"><span class="swatch sw-due"></span> Payment due · dashboard frozen</span>
+        <span class="leg"><span class="swatch sw-off"></span> Offline</span>
+      </div>
+    </section>
+
+    <!-- BOTTOM: PAYMENTS + ALERTS -->
+    <section class="bottom">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-h-left">
+            <span class="dot live"></span>
+            <span class="panel-title">Payments</span>
+          </div>
+          <span class="panel-note">M-Pesa · today <b style="color:var(--ink)">KES 86,400</b></span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 482</span><span class="unit-tag">LGF-0188</span></div><div class="row-sub">Nanyuki · top-up · 2 min ago</div></div>
+            <div class="amt">+250<small>KES · confirmed</small></div>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 119</span><span class="unit-tag">LGF-0461</span></div><div class="row-sub">Isiolo · top-up · 6 min ago</div></div>
+            <div class="amt">+100<small>KES · confirmed</small></div>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 730</span><span class="unit-tag">LGF-0044</span></div><div class="row-sub">Meru · unlock + 30 days · 11 min ago</div></div>
+            <div class="amt">+500<small>KES · confirmed</small></div>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 905</span><span class="unit-tag">LGF-0312</span></div><div class="row-sub">Kitui · top-up · 18 min ago</div></div>
+            <div class="amt">+250<small>KES · confirmed</small></div>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 268</span><span class="unit-tag">LGF-0277</span></div><div class="row-sub">Garissa · top-up · 23 min ago</div></div>
+            <div class="amt">+150<small>KES · confirmed</small></div>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-top"><span class="phone">2547•• ••• 551</span><span class="unit-tag">LGF-0129</span></div><div class="row-sub">Machakos · top-up · 31 min ago</div></div>
+            <div class="amt">+250<small>KES · confirmed</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-h-left">
+            <span class="panel-title">AI alerts</span>
+            <span class="panel-note">flagged by fraud model</span>
+          </div>
+          <span class="panel-note"><b style="color:var(--alert)">4</b> open</span>
+        </div>
+        <div class="alerts">
+          <div class="alert-row">
+            <span class="sev high">HIGH</span>
+            <div class="alert-body">
+              <div class="alert-title">Enclosure opened <span class="uid">LGF-0411</span></div>
+              <div class="alert-desc">Tamper switch tripped. Dashboard frozen, awaiting field review.</div>
+              <div class="alert-meta">Marsabit · 14:22</div>
+            </div>
+          </div>
+          <div class="alert-row">
+            <span class="sev med">MED</span>
+            <div class="alert-body">
+              <div class="alert-title">Load without panel input <span class="uid">LGF-0273</span></div>
+              <div class="alert-desc">Power drawn while generation reads zero. Possible wiring bypass.</div>
+              <div class="alert-meta">Garissa · 13:48</div>
+            </div>
+          </div>
+          <div class="alert-row">
+            <span class="sev med">MED</span>
+            <div class="alert-body">
+              <div class="alert-title">Fast battery drain <span class="uid">LGF-0096</span></div>
+              <div class="alert-desc">Charge fell 38% in an hour. Battery health likely degraded.</div>
+              <div class="alert-meta">Kitui · 12:30</div>
+            </div>
+          </div>
+          <div class="alert-row">
+            <span class="sev low">LOW</span>
+            <div class="alert-body">
+              <div class="alert-title">Offline 26 hours <span class="uid">LGF-0345</span></div>
+              <div class="alert-desc">No signal since yesterday. Check GSM coverage or power.</div>
+              <div class="alert-meta">Wajir · last seen 11:40</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- live clock ---------- */
+  function nairobiNow(){
+    // build a Date in EAT (UTC+3) regardless of viewer's local zone
+    var now = new Date();
+    var utc = now.getTime() + now.getTimezoneOffset()*60000;
+    return new Date(utc + 3*3600000);
+  }
+  function pad(n){return n<10?'0'+n:''+n;}
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function tick(){
+    var d=nairobiNow();
+    document.getElementById('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    document.getElementById('cdate').textContent=days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' · EAT';
+    return d;
+  }
+
+  /* ---------- diurnal arc ---------- */
+  var W=1000, horizonY=214, amp=150, arcH=168;
+  var sunrise=6.4, sunset=18.6, peakKW=46;
+  function genNorm(h){
+    if(h<=sunrise||h>=sunset) return 0;
+    var t=(h-sunrise)/(sunset-sunrise);
+    return Math.pow(Math.sin(Math.PI*t),1.15);
+  }
+  function x2(h){return (h/24)*W;}
+  function arcY(f){return horizonY - arcH*Math.sin(Math.PI*f);}
+
+  // build generation path
+  var pts=[]; for(var h=sunrise; h<=sunset+0.001; h+=0.25){ pts.push([x2(h), horizonY - genNorm(h)*amp]); }
+  var line='M'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L');
+  document.getElementById('genLine').setAttribute('d', line);
+  document.getElementById('genFill').setAttribute('d', line+' L'+x2(sunset).toFixed(1)+','+horizonY+' L'+x2(sunrise).toFixed(1)+','+horizonY+' Z');
+
+  // sun track (faint dotted arc)
+  var tpts=[]; for(var f=0; f<=1.001; f+=0.04){ tpts.push([x2(sunrise+f*(sunset-sunrise)), arcY(f)]); }
+  document.getElementById('track').setAttribute('d','M'+tpts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L'));
+
+  function placeSun(d){
+    var h=d.getHours()+d.getMinutes()/60;
+    var nowX=x2(h);
+    var sun=document.getElementById('sun'), glow=document.getElementById('sunGlowC');
+    var nl=document.getElementById('nowLine'), lbl=document.getElementById('nowLabel');
+    var genNowEl=document.getElementById('genNow'), genUnit=document.getElementById('genUnit'), genState=document.getElementById('genState');
+    var title=document.getElementById('arcTitle');
+
+    nl.setAttribute('x1',nowX); nl.setAttribute('x2',nowX);
+    lbl.setAttribute('x', Math.max(34,Math.min(966,nowX)));
+    lbl.setAttribute('y', 14);
+    lbl.textContent = pad(d.getHours())+':'+pad(d.getMinutes());
+
+    var daytime = h>sunrise && h<sunset;
+    if(daytime){
+      var f=(h-sunrise)/(sunset-sunrise);
+      var sy=arcY(f);
+      sun.setAttribute('cx',nowX); sun.setAttribute('cy',sy);
+      sun.setAttribute('r',9); sun.setAttribute('fill','#FFD27A');
+      glow.setAttribute('cx',nowX); glow.setAttribute('cy',sy); glow.setAttribute('r',46);
+      glow.style.opacity=1;
+      var kw=peakKW*genNorm(h);
+      genNowEl.textContent=kw.toFixed(1); genUnit.textContent='kW';
+      genState.textContent='across 487 reporting units';
+      title.textContent='Fleet generation across the day';
+    } else {
+      // night: moon on horizon, battery carrying load
+      var nx = h<=sunrise ? x2(h) : x2(h);
+      sun.setAttribute('cx',nx); sun.setAttribute('cy',horizonY-10);
+      sun.setAttribute('r',6); sun.setAttribute('fill','#C9D2E8');
+      glow.style.opacity=0;
+      genNowEl.textContent='0.0'; genUnit.textContent='kW';
+      genState.textContent='battery reserve carrying load · 1.84 MWh';
+      title.textContent='Today\u2019s generation · battery carrying load';
+    }
+  }
+
+  function animateDraw(){
+    var gl=document.getElementById('genLine');
+    var len=gl.getTotalLength();
+    gl.style.strokeDasharray=len; gl.style.strokeDashoffset=len;
+    var fill=document.getElementById('genFill'); fill.style.opacity=0;
+    gl.getBoundingClientRect();
+    gl.style.transition='stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)';
+    fill.style.transition='opacity 1s ease .35s';
+    gl.style.strokeDashoffset=0; fill.style.opacity=1;
+  }
+
+  /* ---------- fleet status wall ---------- */
+  var towns=['Nanyuki','Isiolo','Marsabit','Moyale','Garissa','Wajir','Mandera','Kitui','Mwingi','Machakos','Meru','Maua','Nyahururu','Rumuruti','Maralal','Baragoi','Lodwar','Habaswein','Modogashe','Hola','Garsen','Voi','Kibwezi','Makindu','Sultan Hamud','Kapenguria'];
+  var seed=7; function rnd(){ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; }
+  var wall=document.getElementById('wall'); var N=126;
+  for(var i=0;i<N;i++){
+    var r=rnd(); var cls, info;
+    var id='LGF-'+String((i*7+44)%899+100).padStart(4,'0');
+    var town=towns[Math.floor(rnd()*towns.length)];
+    var soc=Math.floor(40+rnd()*60);
+    if(r<0.80){ cls='ok'; info=id+' · '+town+' — Online · '+Math.floor(70+rnd()*30)+'% · paid '+(1+Math.floor(rnd()*9))+'d ago'; }
+    else if(r<0.88){ cls='low'; info=id+' · '+town+' — Online · '+(15+Math.floor(rnd()*20))+'% battery'; }
+    else if(r<0.94){ cls='due'; info=id+' · '+town+' — Payment due · dashboard frozen '+(1+Math.floor(rnd()*4))+'d'; }
+    else { cls='off'; info=id+' · '+town+' — Offline '+(6+Math.floor(rnd()*40))+'h'; }
+    var c=document.createElement('div');
+    c.className='cell '+cls+(cls==='ok'&&!reduce?' breathe':'');
+    if(cls==='ok'&&!reduce){ c.style.animationDelay=(rnd()*4).toFixed(2)+'s'; }
+    c.setAttribute('title',info);
+    c.setAttribute('tabindex','0');
+    wall.appendChild(c);
+  }
+
+  /* ---------- boot ---------- */
+  var d=tick();
+  placeSun(d);
+  if(!reduce){ requestAnimationFrame(animateDraw); }
+  setInterval(function(){ var dd=tick(); placeSun(dd); }, 1000);
+})();
+</script>
+</body>
+</html>
