@@ -71,16 +71,6 @@
   .nav a.on{background:rgba(157,102,255,0.14);color:var(--accent-hi)}
   .nav a.on svg{opacity:1}
   .nav a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-  .rail-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line)}
-  .acct{display:flex;align-items:center;gap:11px;padding:8px 6px}
-  .acct-badge{
-    width:34px;height:34px;border-radius:6px;flex:0 0 auto;
-    background:linear-gradient(140deg,#1f1f1f,#0d0d0d);
-    border:1px solid var(--line-2);
-    display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--accent-hi);
-  }
-  .acct-name{font-size:13px;font-weight:600;line-height:1.2}
-  .acct-role{font-size:11px;color:var(--ink-faint)}
 
   /* main */
   .main{padding:26px clamp(20px,3vw,40px) 56px;max-width:1320px;width:100%}
@@ -247,7 +237,7 @@
   @media (max-width:860px){
     .app{grid-template-columns:1fr}
     .rail{position:static;height:auto;flex-direction:row;align-items:center;gap:18px;padding:14px 18px;border-right:none;border-bottom:1px solid var(--line)}
-    .nav,.nav-h,.rail-foot{display:none}
+    .nav,.nav-h{display:none}
     .brand{padding:0}
     .hero{grid-template-columns:1fr}
     .hero-side{border-left:none;border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;gap:24px}
@@ -308,15 +298,6 @@
       </a>
     </nav>
 
-    <div class="rail-foot">
-      <div class="acct">
-        <div class="acct-badge">MS</div>
-        <div>
-          <div class="acct-name">Mwangaza Solar</div>
-          <div class="acct-role">Distributor · Nanyuki</div>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <!-- MAIN -->
