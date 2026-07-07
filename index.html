@@ -258,14 +258,6 @@
   .plan-cta.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   .plan-cta.primary:hover{background:var(--accent-hi)}
 
-  /* testimonials */
-  .quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px}
-  .quote{display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2)}
-  .quote-text{font-size:13.5px;line-height:1.55;color:var(--ink-dim)}
-  .quote-text b{color:var(--ink);font-weight:600}
-  .quote-who{font-size:12px;color:var(--ink-faint);margin-top:auto}
-  .quote-who b{display:block;color:var(--ink);font-weight:600;font-size:12.5px}
-
   /* faq */
   .faq-list{padding:4px 18px 14px}
   .qa{border-bottom:1px solid var(--line)}
@@ -319,7 +311,7 @@
     .footer-grid{grid-template-columns:1fr 1fr}
   }
   @media (max-width:960px){
-    .steps,.plans,.quotes{grid-template-columns:1fr}
+    .steps,.plans{grid-template-columns:1fr}
     .contact-grid{grid-template-columns:1fr}
   }
   @media (max-width:640px){
@@ -393,10 +385,6 @@
       <a href="#pricing">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         Pricing
-      </a>
-      <a href="#testimonials">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M19 20a5.6 5.6 0 0 0-3-5"/></svg>
-        Customers
       </a>
       <a href="#faq">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -771,16 +759,6 @@
       </div>
     </section>
 
-    <!-- TESTIMONIALS -->
-    <section class="panel mt" id="testimonials">
-      <div class="panel-head">
-        <div class="panel-h-left">
-          <span class="panel-title">What installers say</span>
-          <span class="panel-note">real feedback from real deployments</span>
-        </div>
-      </div>
-    </section>
-
     <!-- FAQ -->
     <section class="panel mt" id="faq">
       <div class="panel-head">
@@ -911,7 +889,6 @@
         <div class="f-col">
           <div class="f-h">Company</div>
           <a href="#about">About</a>
-          <a href="#testimonials">Customers</a>
           <a href="#faq">FAQ</a>
           <a href="https://larry-thuku-portfolio.netlify.app/" target="_blank" rel="noopener">Founder ↗</a>
         </div>
